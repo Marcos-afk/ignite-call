@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Heading, MultiStep, Text, TextInput } from '@ignite-ui/react';
+import { api } from '@lib/axios';
 import { useRouter } from 'next/router';
 import { ArrowRight } from 'phosphor-react';
 import { useForm } from 'react-hook-form';
@@ -33,9 +34,16 @@ const Register = () => {
     }
   }, [username, setValue]);
 
-  const handleRegister = (data: RegisterFormProps) => {
-    // eslint-disable-next-line no-console
-    console.log(data);
+  const handleRegister = async ({ username, name }: RegisterFormProps) => {
+    try {
+      await api.post('/users', {
+        username,
+        name,
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
   };
 
   return (
