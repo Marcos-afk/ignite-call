@@ -35,10 +35,6 @@
       }
     ],
     "sort-imports": "off",
-    "import/order": "off",
-    "react/jsx-filename-extension": [
-      2,
-      { "extensions": [".js", ".jsx", ".ts", ".tsx"] }
-    ]
+    "import/order": "off"
   }
 }
