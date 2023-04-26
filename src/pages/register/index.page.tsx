@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Heading, MultiStep, Text, TextInput } from '@ignite-ui/react';
 import { api } from '@lib/axios';
+import { AxiosError } from 'axios';
 import { useRouter } from 'next/router';
 import { ArrowRight } from 'phosphor-react';
 import { useForm } from 'react-hook-form';
@@ -41,8 +42,11 @@ const Register = () => {
         name,
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data.message
+          : 'Erro ao criar usuário, tente novamente mais tarde';
+      alert(`Erro ao criar usuário, ${message}`);
     }
   };
 
