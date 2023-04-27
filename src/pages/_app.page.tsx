@@ -2,6 +2,7 @@ import { globalStyles } from '@styles/global';
 import type { AppProps } from 'next/app';
 import { Roboto } from 'next/font/google';
 import Head from 'next/head';
+import { SessionProvider } from 'next-auth/react';
 
 const roboto = Roboto({
   weight: ['400', '500', '700'],
@@ -11,9 +12,12 @@ const roboto = Roboto({
 
 globalStyles();
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps) {
   return (
-    <>
+    <SessionProvider session={session}>
       <style jsx global>{`
         html {
           font-family: ${roboto.style.fontFamily};
@@ -25,6 +29,6 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/Ignite-simbol.svg" />
       </Head>
       <Component {...pageProps} />
-    </>
+    </SessionProvider>
   );
 }

@@ -41,6 +41,8 @@ const Register = () => {
         username,
         name,
       });
+
+      await router.push('/register/connect-calendar');
     } catch (error) {
       const message =
         error instanceof AxiosError
