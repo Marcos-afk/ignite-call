@@ -1,3 +1,5 @@
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
 
 import { Calender } from '@components/Calendar';
@@ -13,7 +15,11 @@ interface Availability {
   availableTimes: number[];
 }
 
-export const CalenderStep = () => {
+interface CalenderStepProps {
+  onSelectedDateTime: (date: Date) => void;
+}
+
+export const CalenderStep = ({ onSelectedDateTime }: CalenderStepProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const isDataSelected = !!selectedDate;
 
@@ -45,6 +51,15 @@ export const CalenderStep = () => {
     },
   );
 
+  const handleSelectTime = (hour: number) => {
+    const dateWithTime = dayjs(selectedDate)
+      .set('hour', hour)
+      .startOf('hour')
+      .toDate();
+
+    onSelectedDateTime(dateWithTime);
+  };
+
   return (
     <S.Container isTimePickerOpen={isDataSelected}>
       <Calender selectedDate={selectedDate} onSelectedDate={setSelectedDate} />
@@ -58,6 +73,7 @@ export const CalenderStep = () => {
               <S.TimePickerItem
                 key={hour}
                 disabled={!availability.availableTimes.includes(hour)}
+                onClick={() => handleSelectTime(hour)}
               >
                 {String(hour).padStart(2, '0')}:00h
               </S.TimePickerItem>

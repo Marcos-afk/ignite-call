@@ -1,12 +1,24 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Text, TextArea, TextInput } from '@ignite-ui/react';
+import { api } from '@lib/axios';
+import { AxiosError } from 'axios';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/router';
 import { CalendarBlank, Clock } from 'phosphor-react';
 import { useForm } from 'react-hook-form';
 
 import * as S from './styles';
 import { ConfirmStepFormProps, ConfirmStepFormSchema } from './validate';
 
-export const ConfirmStep = () => {
+interface ConfirmStepProps {
+  schedulingDate: Date;
+  onCancelConfirmation: () => void;
+}
+
+export const ConfirmStep = ({
+  schedulingDate,
+  onCancelConfirmation,
+}: ConfirmStepProps) => {
   const {
     register,
     handleSubmit,
@@ -15,25 +27,45 @@ export const ConfirmStep = () => {
     resolver: zodResolver(ConfirmStepFormSchema),
   });
 
-  const handleConfirmScheduling = async (data: ConfirmStepFormProps) => {
-    await Promise.resolve(
-      setTimeout(() => {
-        // eslint-disable-next-line no-console
-        console.log(data);
-      }, 2000),
-    );
+  const router = useRouter();
+  const username = router.query.username as string;
+
+  const handleConfirmScheduling = async ({
+    name,
+    email,
+    observations,
+  }: ConfirmStepFormProps) => {
+    try {
+      await api.post(`/users/${username}/schedule`, {
+        name,
+        email,
+        observations,
+        date: schedulingDate,
+      });
+
+      onCancelConfirmation();
+    } catch (error) {
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data.message
+          : 'Erro ao criar agendamento, tente novamente mais tarde';
+      alert(`Erro ao criar agendamento, ${message}`);
+    }
   };
+
+  const describedDate = dayjs(schedulingDate).format('DD[ de ]MMMM[ de ]YYYY');
+  const describedTime = dayjs(schedulingDate).format('HH:mm[h]');
 
   return (
     <S.Container as="form" onSubmit={handleSubmit(handleConfirmScheduling)}>
       <S.Header>
         <Text>
           <CalendarBlank />
-          10 de Maio de 2023
+          {describedDate}
         </Text>
         <Text>
           <Clock />
-          08:00h
+          {describedTime}
         </Text>
       </S.Header>
 
@@ -68,7 +100,7 @@ export const ConfirmStep = () => {
       </label>
 
       <S.Actions>
-        <Button type="button" variant="tertiary">
+        <Button type="button" variant="tertiary" onClick={onCancelConfirmation}>
           Cancelar
         </Button>
         <Button type="submit" disabled={isSubmitting}>

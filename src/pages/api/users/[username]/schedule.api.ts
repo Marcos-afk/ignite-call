@@ -1,0 +1,82 @@
+import { getGoogleOAuthToken } from '@lib/google';
+import { prisma } from '@lib/prisma';
+import dayjs from 'dayjs';
+import { google } from 'googleapis';
+import { NextApiRequest, NextApiResponse } from 'next';
+
+const schedule = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== 'POST') {
+    return res.status(405).end();
+  }
+
+  const username = req.query.username as string;
+  const { name, email, observations, date } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      username,
+    },
+  });
+
+  if (!user) {
+    return res.status(404).json({
+      message: 'Usuário não encontrado.',
+    });
+  }
+
+  const schedulingDate = dayjs(date).startOf('hour');
+
+  if (schedulingDate.isBefore(new Date())) {
+    return res.status(400).json({
+      message: 'Não é possível agendar um horário no passado.',
+    });
+  }
+
+  const conflictingScheduling = await prisma.scheduling.findFirst({
+    where: {
+      user_id: user.id,
+      date: schedulingDate.toDate(),
+    },
+  });
+
+  if (conflictingScheduling) {
+    return res.status(400).json({
+      message: 'Já existe um agendamento para este horário.',
+    });
+  }
+
+  await prisma.scheduling.create({
+    data: {
+      date: schedulingDate.toDate(),
+      email,
+      name,
+      observations,
+      user_id: user.id,
+    },
+  });
+
+  const calendar = google.calendar({
+    version: 'v3',
+    auth: await getGoogleOAuthToken(user.id),
+  });
+
+  await calendar.events.insert({
+    calendarId: 'primary',
+    conferenceDataVersion: 1,
+    requestBody: {
+      summary: `Ignite Call: ${name}`,
+      description: observations,
+      start: {
+        dateTime: schedulingDate.format(),
+      },
+      end: {
+        dateTime: schedulingDate.add(1, 'hour').format(),
+      },
+      attendees: [{ email, displayName: name }],
+    },
+  });
+
+  return res.status(201).end();
+};
+
+export default schedule;
